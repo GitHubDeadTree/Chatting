@@ -40,11 +40,21 @@ public class ClientHandler implements Runnable {
              * 如果客户端不输入，就会一直等待
              */
             while ((clientMessage = reader.readLine()) != null) {
-                if (clientMessage.startsWith("/file ")) {
+                /*
+                 * 如果用户要传文件的话，就一定是私发(不可能广播文件)
+                 */
+                if (clientMessage.startsWith(SystemConst.Send_File)) {
                     String[] parts = clientMessage.split(" ", 3);
                     String receiverUsername = parts[1];
                     chatServer.sendFile(parts[2].getBytes(), this, receiverUsername);
-                } else {
+                } else if(clientMessage.startsWith(SystemConst.Send_Message_Private)){
+
+                    clientMessage = clientMessage.substring(SystemConst.Send_Message_Private.length());
+
+                    String receiverUserName = clientMessage.substring(0,clientMessage.indexOf(' '));
+                    clientMessage = clientMessage.substring(receiverUserName.length()+1);
+                    chatServer.sendMessagePrivate("(悄悄话)" + username + ": " + clientMessage, this,receiverUserName);
+                } else{
                     chatServer.broadcastMessage(username + ": " + clientMessage, this);
                 }
 

@@ -5,8 +5,8 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-服务端的代码
+/**
+ * 服务端的代码
  */
 public class ChatServer {
     private List<ClientHandler> clients = new ArrayList<>();
@@ -44,6 +44,13 @@ public class ChatServer {
     public void broadcastMessage(String message, ClientHandler sender) {
         for (ClientHandler client : clients) {
             if (client.getUsername() != sender.getUsername()) {
+                client.sendMessage(message);
+            }
+        }
+    }
+    public void sendMessagePrivate(String message,ClientHandler sender,String receiverUsername) {
+        for (ClientHandler client : clients) {
+            if (client.getUsername().equals(receiverUsername)) {
                 client.sendMessage(message);
             }
         }

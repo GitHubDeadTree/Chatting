@@ -3,8 +3,8 @@ package com.kumu;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
-/*
-客户端的代码
+/**
+ * 客户端的代码
  */
 public class ChatClient {
     public static void main(String[] args) {
@@ -20,7 +20,7 @@ public class ChatClient {
             System.out.print("Enter your username: ");
             String username = scanner.nextLine();
             writer.println(username);
-            /*
+            /**
                 * 启动一个新线程，用于持续接收服务器发来的消息。
                 * 这个线程中通过 reader.readLine() 从输入流中读取服务器的消息，并将其打印到控制台。
              */

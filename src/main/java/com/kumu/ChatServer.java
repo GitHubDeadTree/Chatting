@@ -9,7 +9,7 @@ import java.util.List;
  * 服务端的代码
  */
 public class ChatServer {
-    private List<ClientHandler> clients = new ArrayList<>();
+    private List<ClientHandler> clientHandlerList = new ArrayList<>();
 
     public static void main(String[] args) {
         new ChatServer().startServer();
@@ -33,7 +33,7 @@ public class ChatServer {
 
                 //新建客户处理器，处理这个客户的请求，在新线程中工作
                 ClientHandler clientHandler = new ClientHandler(clientSocket,this);
-                clients.add(clientHandler);
+                clientHandlerList.add(clientHandler);
                 new Thread(clientHandler).start();
             }
         } catch (IOException e) {
@@ -42,14 +42,14 @@ public class ChatServer {
     }
 
     public void broadcastMessage(String message, ClientHandler sender) {
-        for (ClientHandler client : clients) {
+        for (ClientHandler client : clientHandlerList) {
             if (client.getUsername() != sender.getUsername()) {
                 client.sendMessage(message);
             }
         }
     }
     public void sendMessagePrivate(String message,ClientHandler sender,String receiverUsername) {
-        for (ClientHandler client : clients) {
+        for (ClientHandler client : clientHandlerList) {
             if (client.getUsername().equals(receiverUsername)) {
                 client.sendMessage(message);
             }
@@ -57,14 +57,14 @@ public class ChatServer {
     }
 
     public void sendFile(byte[] fileBytes, ClientHandler sender, String receiverUsername) {
-        for (ClientHandler client : clients) {
-            if (client.getUsername().equals(receiverUsername)) {
-                client.sendFile(fileBytes, sender.getUsername());
+        for (ClientHandler clientHandler : clientHandlerList) {
+            if (clientHandler.getUsername().equals(receiverUsername)) {
+                clientHandler.sendFile(fileBytes, sender.getUsername());
             }
         }
     }
 
     public void removeClient(ClientHandler client) {
-        clients.remove(client);
+        clientHandlerList.remove(client);
     }
 }

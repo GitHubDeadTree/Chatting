@@ -2,9 +2,10 @@ package com.kumu;
 
 import java.io.*;
 import java.net.Socket;
-/*
+/**
  * 客户端处理器，就是服务器提供的服务线程
  * 封装了从服务器到客户端的Socket套接字
+ * 客户端通过这个Handler与服务器通信，上传文件等
  */
 public class ClientHandler implements Runnable {
     private Socket clientSocket;
@@ -16,7 +17,7 @@ public class ClientHandler implements Runnable {
     /*
      * 构造方法，接收一个socket对象
      */
-    public ClientHandler(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的套接字
+    public ClientHandler(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的Socket
         this.clientSocket = socket;
         try {
             reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -43,7 +44,7 @@ public class ClientHandler implements Runnable {
                 /*
                  * 如果用户要传文件的话，就一定是私发(不可能广播文件)
                  */
-                if (clientMessage.startsWith(SystemConst.SEND_FILE)) {
+                if (clientMessage.startsWith(SystemConst.SEND_FILE_START)) {
                     String[] parts = clientMessage.split(" ", 3);
                     String receiverUsername = parts[1];
                     chatServer.sendFile(parts[2].getBytes(), this, receiverUsername);
@@ -81,8 +82,39 @@ public class ClientHandler implements Runnable {
         return username;
     }
 
-    public void sendFile(byte[] fileBytes, String senderUsername) {
-        // Implement file sending logic to the client
+    public void sendFile(String filePath, String senderUsername) {
+        try {
+            File file = new File(filePath);
+            if (!file.exists()) {
+                System.out.println("File does not exist: " + filePath);
+                return;
+            }
+
+            // 发送文件开始标志给客户端
+            writer.println(SystemConst.SEND_FILE_START);
+
+            // 发送发送者的用户名
+            writer.println(senderUsername);
+
+            // 发送文件内容
+            OutputStream outputStream = clientSocket.getOutputStream();
+            FileInputStream fileInputStream = new FileInputStream(file);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
+            }
+
+            outputStream.flush();
+
+            // 发送文件结束标志给客户端
+            writer.println(SystemConst.SEND_FILE_END);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
 }
 

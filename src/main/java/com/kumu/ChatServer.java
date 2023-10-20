@@ -10,6 +10,7 @@ import java.util.List;
  */
 public class ChatServer {
     private List<ClientHandler> clientHandlerList = new ArrayList<>();
+    private transThread_upLoadToServer threadFile;
 
     public static void main(String[] args) {
         new ChatServer().startServer();
@@ -25,12 +26,11 @@ public class ChatServer {
 
             //无限循环，用于持续接收新客户端的连接
             while (true) {
-                /*
+                /**
                  * serverSocket.accept() 是一个阻塞方法，它用于等待客户端的连接。只有新客户端接入，才会执行下面的代码
                  */
                 //为每一个客户端创建一个新的socket对象
                 Socket clientSocket = serverSocket.accept();
-
                 //新建客户处理器，处理这个客户的请求，在新线程中工作
                 ClientHandler clientHandler = new ClientHandler(clientSocket,this);
                 clientHandlerList.add(clientHandler);
@@ -42,9 +42,9 @@ public class ChatServer {
     }
 
     public void broadcastMessage(String message, ClientHandler sender) {
-        for (ClientHandler client : clientHandlerList) {
-            if (client.getUsername() != sender.getUsername()) {
-                client.sendMessage(message);
+        for (ClientHandler clientHandler : clientHandlerList) {
+            if (clientHandler.getUsername() != sender.getUsername()) {
+                clientHandler.sendMessage(message);
             }
         }
     }
@@ -52,14 +52,6 @@ public class ChatServer {
         for (ClientHandler client : clientHandlerList) {
             if (client.getUsername().equals(receiverUsername)) {
                 client.sendMessage(message);
-            }
-        }
-    }
-
-    public void sendFile(byte[] fileBytes, ClientHandler sender, String receiverUsername) {
-        for (ClientHandler clientHandler : clientHandlerList) {
-            if (clientHandler.getUsername().equals(receiverUsername)) {
-                clientHandler.sendFile(fileBytes, sender.getUsername());
             }
         }
     }

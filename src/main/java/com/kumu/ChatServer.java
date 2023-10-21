@@ -63,4 +63,9 @@ public class ChatServer {
         transThread_upLoadToServer threadFile = new transThread_upLoadToServer(fileName,this,userName);
         new Thread(threadFile).start();
     }
+
+    public void downloadFromServer(String fileName) {
+        transThread_downloadToClient threadFile = new transThread_downloadToClient(fileName);
+        new Thread(threadFile).start();
+    }
 }

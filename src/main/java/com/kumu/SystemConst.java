@@ -1,5 +1,7 @@
 package com.kumu;
-
+/**
+ * 系统常量字面量
+ */
 public class SystemConst {
     public static final String SEND_MESSAGE_PUBLIC = "/public ";
     /**
@@ -9,7 +11,9 @@ public class SystemConst {
     /**
      * 传文件
      */
-    public static final String SEND_FILE_START = "/file";
+    public static final String UPLOAD_FILE = "/upload";
+    public static final String DOWNLOAD_FILE = "/download";
+
     public static final String SEND_FILE_END = "/file_end";
     public static final String PRIVATE_PREFIX = "(悄悄话)";
 
@@ -18,4 +22,7 @@ public class SystemConst {
     public static final String FILE_FOLDER_SERVER = "severFile";
     public static final String FILE_FOLDER_CLIENT = "clientFile";
     public static final String FILE_UPLOAD_SUCCESS = "文件上传成功!";
+    public static final int THREAD_PORT_DOWNLOAD = 8801;
+    public static final int THREAD_UPLOAD_PORT  = 8800;
+
 }

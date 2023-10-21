@@ -2,6 +2,8 @@ package com.kumu;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Random;
+
 /**
  * 客户端处理器，就是服务器提供的服务线程
  * 封装了从服务器到客户端的Socket套接字
@@ -44,9 +46,11 @@ public class ClientHandler implements Runnable {
                 /**
                  * 如果用户要传文件的话，就一定是私发(不可能广播文件)
                  */
-                if (clientMessage.startsWith(SystemConst.SEND_FILE_START)) {
+                if (clientMessage.startsWith(SystemConst.UPLOAD_FILE)) {
                     uploadFileToServer("test.txt");
-                } else if(clientMessage.startsWith(SystemConst.SEND_MESSAGE_PRIVATE)){
+                }else if(clientMessage.startsWith(SystemConst.DOWNLOAD_FILE)){
+                    downloadFileFromServer("test_Server.txt");
+                }else if(clientMessage.startsWith(SystemConst.SEND_MESSAGE_PRIVATE)){
 
                     clientMessage = clientMessage.substring(SystemConst.SEND_MESSAGE_PRIVATE.length());
 
@@ -85,62 +89,59 @@ public class ClientHandler implements Runnable {
      * */
     public void uploadFileToServer(String fileName) throws IOException {
         chatServer.upLoadToServer(fileName, userName);
-        Socket socketToFile = new Socket("localhost", 8800);
-        // 1.创建本地文件输入流
+        Socket socketTrans = new Socket("localhost", 8800);
+        // 创建本地文件输入流
         FileInputStream fIS = new FileInputStream("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\clientFile\\"+fileName);
 
-        // 3.获取网络字节输出流
-        OutputStream opStream = socketToFile.getOutputStream();
-        // 4.读取要上传的文件数据
+        // 获取网络字节输出流
+        OutputStream opStream = socketTrans.getOutputStream();
+        // 读取要上传的文件数据
         byte[] bytes = new byte[1024];
         int i = 0;
         while ((i = fIS.read(bytes)) != -1) {
-            // 5.使用输出流将读取到的文件数据发送到服务端的Socket
+            // 使用输出流将文件数据发送到服务端的Socket
             opStream.write(bytes, 0, i);
         }
         // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
-        socketToFile.shutdownOutput();
+        socketTrans.shutdownOutput();
         // 8.释放资源
         fIS.close();
-        socketToFile.close();
+        socketTrans.close();
     }
 
     /**
      * 从服务器下载文件，用新的Socket访问服务器的下载线程
      * */
-    public void downloadFileFromServer() throws IOException {
-        Socket socketToFile = new Socket("localhost", 8800);
-        // 1.创建本地文件输入流
-        FileInputStream fIS = new FileInputStream("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\test.txt");
-
-        // 3.获取网络字节输出流
-        OutputStream opStream = socketToFile.getOutputStream();
-        // 4.读取要上传的文件数据
+    public void downloadFileFromServer(String _fileName) throws IOException {
+        // 4.判断本地的目标目录路径是否存在，若不存在要创建此目录
+        File file = new File("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\"+SystemConst.FILE_FOLDER_CLIENT);
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        chatServer.downloadFromServer(_fileName);
+        Socket socketTrans = new Socket("localhost", SystemConst.THREAD_PORT_DOWNLOAD);
+        String fileName = System.currentTimeMillis() + (new Random().nextInt(9) + 1) + _fileName;
+        // 5.创建一个本地字节输出流对象
+        FileOutputStream fos = new FileOutputStream(file + File.separator + fileName);
+        // 获得输入流
+        InputStream inStream = socketTrans.getInputStream();
+        // 6.使用输入流的方法 read 读取客户端发送过来的文件数据
         byte[] bytes = new byte[1024];
         int i = 0;
-        while ((i = fIS.read(bytes)) != -1) {
-            // 5.使用网络字节输出流将读取到的文件数据发送到服务端的Socket
-            opStream.write(bytes, 0, i);
+        while ((i = inStream.read(bytes)) != -1) {
+            // 7.使用本地输出流将读取到文件数据写入到本地文件中
+            fos.write(bytes, 0, i);
         }
-        // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
-        // 终止标记表示输出流写出的数据已经没有了，服务端解析到这个标记后就，有关的线程就不会一直处于等待接收
-        // 数据的状态
-        socketToFile.shutdownOutput();
+        chatServer.sendMessagePrivate("接收文件："+fileName+" 到 "+file.getPath(),userName);
 
-        InputStream is = clientSocket.getInputStream();
-        // 7.读取服务端回写的数据
-        i = is.read(bytes);
-        // 打印到控制台
-        System.out.println(new String(bytes, 0, i));
-        // 8.释放资源（FileInputStream、Socket）
-        fIS.close();
-        socketToFile.close();
+        fos.close();
+        socketTrans.close();
     }
 
     /**
      *
      * @param senderUsername
-     * 接受文件的方法
+     * 从其他客户端在线接收文件
      */
     private void receiveFile(String senderUsername) {
         try {

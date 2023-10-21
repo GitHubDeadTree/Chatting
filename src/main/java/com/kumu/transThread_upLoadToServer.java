@@ -29,7 +29,7 @@ public class transThread_upLoadToServer implements Runnable{
     }
     public void run() {
 
-        try (ServerSocket server = new ServerSocket(8800)) {
+        try (ServerSocket server = new ServerSocket(SystemConst.THREAD_UPLOAD_PORT)) {
             System.out.println(SystemConst.THREAD_UPLOAD +" is running on port 8800...");
 
             while (true) {

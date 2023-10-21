@@ -15,7 +15,7 @@ public class ClientHandler implements Runnable {
     private BufferedReader reader;
     private PrintWriter writer;
     private ChatServer chatServer;
-    private String username;
+    private String userName;
 
 
     /*
@@ -35,30 +35,26 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            username = reader.readLine();
-            System.out.println(username + " connected.");
-
-            chatServer.broadcastMessage(username + " joined the chat.", this);
+            userName = reader.readLine();
+            System.out.println(userName +clientSocket+" connected.");
+            chatServer.broadcastMessage(userName + " joined the chat.", this);
 
             String clientMessage;
-            /*
-             * 如果客户端不输入，就会一直等待
-             */
             while ((clientMessage = reader.readLine()) != null) {
-                /*
+                /**
                  * 如果用户要传文件的话，就一定是私发(不可能广播文件)
                  */
                 if (clientMessage.startsWith(SystemConst.SEND_FILE_START)) {
-                    uploadFileToServer();
+                    uploadFileToServer("test.txt");
                 } else if(clientMessage.startsWith(SystemConst.SEND_MESSAGE_PRIVATE)){
 
                     clientMessage = clientMessage.substring(SystemConst.SEND_MESSAGE_PRIVATE.length());
 
                     String receiverUserName = clientMessage.substring(0,clientMessage.indexOf(' '));
                     clientMessage = clientMessage.substring(receiverUserName.length()+1);
-                    chatServer.sendMessagePrivate(SystemConst.PRIVATE_PREFIX + username + ": " + clientMessage, this,receiverUserName);
+                    chatServer.sendMessagePrivate(SystemConst.PRIVATE_PREFIX + userName + ": " + clientMessage, receiverUserName);
                 } else{
-                    chatServer.broadcastMessage(username + ": " + clientMessage, this);
+                    chatServer.broadcastMessage(userName + ": " + clientMessage, this);
                 }
 
                 if (clientMessage.equals(SystemConst.END_SIGH)) {
@@ -68,8 +64,8 @@ public class ClientHandler implements Runnable {
 
             chatServer.removeClient(this);
             clientSocket.close();
-            System.out.println(username + " disconnected.");
-            chatServer.broadcastMessage(username + " left the chat.", this);
+            System.out.println(userName + " disconnected.");
+            chatServer.broadcastMessage(userName + " left the chat.", this);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,17 +76,18 @@ public class ClientHandler implements Runnable {
         writer.println(message);
     }
 
-    public String getUsername() {
-        return username;
+    public String getUserName() {
+        return userName;
     }
 
     /**
      * 传文件到服务器，用一个新的Socket去连接服务器
      * */
-    public void uploadFileToServer() throws IOException {
+    public void uploadFileToServer(String fileName) throws IOException {
+        chatServer.upLoadToServer(fileName, userName);
         Socket socketToFile = new Socket("localhost", 8800);
         // 1.创建本地文件输入流
-        FileInputStream fIS = new FileInputStream("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\test.txt");
+        FileInputStream fIS = new FileInputStream("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\clientFile\\"+fileName);
 
         // 3.获取网络字节输出流
         OutputStream opStream = socketToFile.getOutputStream();
@@ -98,20 +95,12 @@ public class ClientHandler implements Runnable {
         byte[] bytes = new byte[1024];
         int i = 0;
         while ((i = fIS.read(bytes)) != -1) {
-            // 5.使用网络字节输出流将读取到的文件数据发送到服务端的Socket
+            // 5.使用输出流将读取到的文件数据发送到服务端的Socket
             opStream.write(bytes, 0, i);
         }
         // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
-        // 终止标记表示输出流写出的数据已经没有了，服务端解析到这个标记后就，有关的线程就不会一直处于等待接收
-        // 数据的状态
         socketToFile.shutdownOutput();
-        // 6.使用 Socket 对象的方法 getInputStream 获取网络字节输入流对象
-        InputStream is = socketToFile.getInputStream();
-        // 7.读取服务端回写的数据
-        i = is.read(bytes);
-        // 打印到控制台
-        System.out.println(new String(bytes, 0, i));
-        // 8.释放资源（FileInputStream、Socket）
+        // 8.释放资源
         fIS.close();
         socketToFile.close();
     }
@@ -137,8 +126,8 @@ public class ClientHandler implements Runnable {
         // 终止标记表示输出流写出的数据已经没有了，服务端解析到这个标记后就，有关的线程就不会一直处于等待接收
         // 数据的状态
         socketToFile.shutdownOutput();
-        // 6.使用 Socket 对象的方法 getInputStream 获取网络字节输入流对象
-        InputStream is = socketToFile.getInputStream();
+
+        InputStream is = clientSocket.getInputStream();
         // 7.读取服务端回写的数据
         i = is.read(bytes);
         // 打印到控制台

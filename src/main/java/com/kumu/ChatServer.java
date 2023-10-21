@@ -10,7 +10,6 @@ import java.util.List;
  */
 public class ChatServer {
     private List<ClientHandler> clientHandlerList = new ArrayList<>();
-    private transThread_upLoadToServer threadFile;
 
     public static void main(String[] args) {
         new ChatServer().startServer();
@@ -43,14 +42,14 @@ public class ChatServer {
 
     public void broadcastMessage(String message, ClientHandler sender) {
         for (ClientHandler clientHandler : clientHandlerList) {
-            if (clientHandler.getUsername() != sender.getUsername()) {
+            if (clientHandler.getUserName() != sender.getUserName()) {
                 clientHandler.sendMessage(message);
             }
         }
     }
-    public void sendMessagePrivate(String message,ClientHandler sender,String receiverUsername) {
+    public void sendMessagePrivate(String message,String receiverUsername) {
         for (ClientHandler client : clientHandlerList) {
-            if (client.getUsername().equals(receiverUsername)) {
+            if (client.getUserName().equals(receiverUsername)) {
                 client.sendMessage(message);
             }
         }
@@ -58,5 +57,10 @@ public class ChatServer {
 
     public void removeClient(ClientHandler client) {
         clientHandlerList.remove(client);
+    }
+
+    public void upLoadToServer(String fileName,String userName){
+        transThread_upLoadToServer threadFile = new transThread_upLoadToServer(fileName,this,userName);
+        new Thread(threadFile).start();
     }
 }

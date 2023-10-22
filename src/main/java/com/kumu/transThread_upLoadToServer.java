@@ -58,6 +58,7 @@ public class transThread_upLoadToServer implements Runnable{
                 _chatServer.sendMessagePrivate(SystemConst.FILE_UPLOAD_SUCCESS,_userName);
                 fos.close();
                 socket.close();
+                break;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

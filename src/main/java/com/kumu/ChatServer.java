@@ -40,12 +40,10 @@ public class ChatServer {
         }
     }
 
-    public void broadcastMessage(String message, ClientHandler sender) {
+    public void broadcastMessage(String message) {
         for (ClientHandler clientHandler : clientHandlerList) {
-            if (clientHandler.getUserName() != sender.getUserName()) {
                 clientHandler.sendMessage(message);
             }
-        }
     }
     public void sendMessagePrivate(String message,String receiverUsername) {
         for (ClientHandler client : clientHandlerList) {
@@ -60,8 +58,10 @@ public class ChatServer {
     }
 
     public void upLoadToServer(String fileName,String userName){
-        transThread_upLoadToServer threadFile = new transThread_upLoadToServer(fileName,this,userName);
-        new Thread(threadFile).start();
+        if (Utils.isPortAvailable(SystemConst.THREAD_UPLOAD_PORT)) {
+            transThread_upLoadToServer threadFile = new transThread_upLoadToServer(fileName, this, userName);
+            new Thread(threadFile).start();
+        }
     }
 
     public void downloadFromServer(String fileName) {

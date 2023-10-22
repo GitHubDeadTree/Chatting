@@ -46,6 +46,7 @@ public class transThread_downloadToClient implements Runnable{
                 // 8.释放资源
                 fIS.close();
                 socketTrans.close();
+                break;
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

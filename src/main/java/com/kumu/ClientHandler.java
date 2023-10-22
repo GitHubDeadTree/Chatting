@@ -2,6 +2,7 @@ package com.kumu;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -35,10 +36,18 @@ public class ClientHandler implements Runnable {
         try {
             userName = reader.readLine();
             System.out.println(userName +clientSocket+" connected.");
-            chatServer.broadcastMessage(userName + " joined the chat.", this);
+            chatServer.broadcastMessage(userName + " joined the chat.");
 
             String clientMessage;
-            while ((clientMessage = reader.readLine()) != null) {
+            /**
+             * reader.readLine() 方法会一直等待，直到从输入流中读取到一个完整的文本行，或者直到发生异常。如果没有新的消息或文本行可用，它会一直阻塞。
+             */
+            while (true) {
+                clientMessage = reader.readLine();
+                System.out.println(userName +" 发送 " + clientMessage);
+                if (Objects.isNull(clientMessage)) {
+                    continue;
+                }
                 /**
                  * 如果用户要传文件的话，就一定是私发(不可能广播文件)
                  */
@@ -53,8 +62,9 @@ public class ClientHandler implements Runnable {
                     String receiverUserName = clientMessage.substring(0,clientMessage.indexOf(' '));
                     clientMessage = clientMessage.substring(receiverUserName.length()+1);
                     chatServer.sendMessagePrivate(SystemConst.PRIVATE_PREFIX + userName + ": " + clientMessage, receiverUserName);
+                    chatServer.sendMessagePrivate("(You) "+SystemConst.PRIVATE_PREFIX + ": "+clientMessage,userName);
                 } else{
-                    chatServer.broadcastMessage(userName + ": " + clientMessage, this);
+                    chatServer.broadcastMessage(userName + ": " + clientMessage);
                 }
 
                 if (clientMessage.equals(SystemConst.END_SIGH)) {
@@ -65,7 +75,7 @@ public class ClientHandler implements Runnable {
             chatServer.removeClient(this);
             clientSocket.close();
             System.out.println(userName + " disconnected.");
-            chatServer.broadcastMessage(userName + " left the chat.", this);
+            chatServer.broadcastMessage(userName + " left the chat.");
 
         } catch (IOException e) {
             e.printStackTrace();

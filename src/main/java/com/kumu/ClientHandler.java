@@ -19,10 +19,6 @@ public class ClientHandler implements Runnable {
     private ChatServer chatServer;
     private String userName;
 
-
-    /*
-     * 构造方法，接收一个socket对象
-     */
     public ClientHandler(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的Socket
         this.clientSocket = socket;
         try {
@@ -89,10 +85,9 @@ public class ClientHandler implements Runnable {
      * */
     public void uploadFileToServer(String fileName) throws IOException {
         chatServer.upLoadToServer(fileName, userName);
-        Socket socketTrans = new Socket("localhost", 8800);
+        Socket socketTrans = new Socket("localhost", SystemConst.THREAD_UPLOAD_PORT);
         // 创建本地文件输入流
         FileInputStream fIS = new FileInputStream("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\clientFile\\"+fileName);
-
         // 获取网络字节输出流
         OutputStream opStream = socketTrans.getOutputStream();
         // 读取要上传的文件数据
@@ -104,7 +99,7 @@ public class ClientHandler implements Runnable {
         }
         // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
         socketTrans.shutdownOutput();
-        // 8.释放资源
+
         fIS.close();
         socketTrans.close();
     }
@@ -113,7 +108,7 @@ public class ClientHandler implements Runnable {
      * 从服务器下载文件，用新的Socket访问服务器的下载线程
      * */
     public void downloadFileFromServer(String _fileName) throws IOException {
-        // 4.判断本地的目标目录路径是否存在，若不存在要创建此目录
+        // 判断本地目录路径是否存在，若不存在要创建此目录
         File file = new File("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\"+SystemConst.FILE_FOLDER_CLIENT);
         if (!file.exists()) {
             file.mkdirs();
@@ -121,50 +116,21 @@ public class ClientHandler implements Runnable {
         chatServer.downloadFromServer(_fileName);
         Socket socketTrans = new Socket("localhost", SystemConst.THREAD_PORT_DOWNLOAD);
         String fileName = System.currentTimeMillis() + (new Random().nextInt(9) + 1) + _fileName;
-        // 5.创建一个本地字节输出流对象
+        // 创建一个本地字节输出流对象
         FileOutputStream fos = new FileOutputStream(file + File.separator + fileName);
         // 获得输入流
         InputStream inStream = socketTrans.getInputStream();
-        // 6.使用输入流的方法 read 读取客户端发送过来的文件数据
+        //使用输入流的方法 read 读取客户端发送过来的文件数据
         byte[] bytes = new byte[1024];
         int i = 0;
         while ((i = inStream.read(bytes)) != -1) {
-            // 7.使用本地输出流将读取到文件数据写入到本地文件中
+            // 使用本地输出流将读取到文件数据写入到本地文件中
             fos.write(bytes, 0, i);
         }
         chatServer.sendMessagePrivate("接收文件："+fileName+" 到 "+file.getPath(),userName);
 
         fos.close();
         socketTrans.close();
-    }
-
-    /**
-     *
-     * @param senderUsername
-     * 从其他客户端在线接收文件
-     */
-    private void receiveFile(String senderUsername) {
-        try {
-            InputStream inputStream = clientSocket.getInputStream();
-
-            // 创建一个临时文件来保存接收的文件数据
-            File receivedFile = new File("received_file.txt");
-            FileOutputStream fileOutputStream = new FileOutputStream(receivedFile);
-
-            byte[] buffer = new byte[1024];
-            int bytesRead;
-
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                fileOutputStream.write(buffer, 0, bytesRead);
-            }
-
-            fileOutputStream.close();
-            System.out.println("Received file saved as received_file.txt");
-
-            writer.println(SystemConst.SEND_FILE_END);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
 

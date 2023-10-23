@@ -9,7 +9,7 @@ import java.util.List;
  * 服务端的代码
  */
 public class ChatServer {
-    private List<ClientHandler> clientHandlerList = new ArrayList<>();
+    private List<ClientService> clientServiceList = new ArrayList<>();
 
     public static void main(String[] args) {
         new ChatServer().startServer();
@@ -31,30 +31,34 @@ public class ChatServer {
                 //为每一个客户端创建一个新的socket对象
                 Socket clientSocket = serverSocket.accept();
                 //新建客户处理器，处理这个客户的请求，在新线程中工作
-                ClientHandler clientHandler = new ClientHandler(clientSocket,this);
-                clientHandlerList.add(clientHandler);
-                new Thread(clientHandler).start();
+                ClientService clientService = new ClientService(clientSocket,this);
+                clientServiceList.add(clientService);
+                new Thread(clientService).start();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void broadcastMessage(String message) {
-        for (ClientHandler clientHandler : clientHandlerList) {
-                clientHandler.sendMessage(message);
+    public void broadcastMessage(String message, String userName) {
+        for (ClientService clientService : clientServiceList) {
+                if (!clientService.getUserName().equals(userName)) {
+                    clientService.sendMessage(message);
+                }else{
+                    clientService.sendMessage(SystemConst.USER_SELF+" "+message);
+                }
             }
     }
     public void sendMessagePrivate(String message,String receiverUsername) {
-        for (ClientHandler client : clientHandlerList) {
+        for (ClientService client : clientServiceList) {
             if (client.getUserName().equals(receiverUsername)) {
                 client.sendMessage(message);
             }
         }
     }
 
-    public void removeClient(ClientHandler client) {
-        clientHandlerList.remove(client);
+    public void removeClient(ClientService client) {
+        clientServiceList.remove(client);
     }
 
     public void upLoadToServer(String fileName,String userName){

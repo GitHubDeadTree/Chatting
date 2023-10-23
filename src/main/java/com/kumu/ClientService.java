@@ -10,7 +10,7 @@ import java.util.Random;
  * 封装了从服务器到客户端的Socket套接字
  * 客户端通过这个Handler与服务器通信，上传文件等
  */
-public class ClientHandler implements Runnable {
+public class ClientService implements Runnable {
     /**
      * 服务器连到客户端的Socket
      */
@@ -20,7 +20,7 @@ public class ClientHandler implements Runnable {
     private ChatServer chatServer;
     private String userName;
 
-    public ClientHandler(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的Socket
+    public ClientService(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的Socket
         this.clientSocket = socket;
         try {
             reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -36,7 +36,7 @@ public class ClientHandler implements Runnable {
         try {
             userName = reader.readLine();
             System.out.println(userName +clientSocket+" connected.");
-            chatServer.broadcastMessage(userName + " joined the chat.");
+            chatServer.broadcastMessage(userName + " joined the chat.", userName);
 
             String clientMessage;
             /**
@@ -64,7 +64,7 @@ public class ClientHandler implements Runnable {
                     chatServer.sendMessagePrivate(SystemConst.PRIVATE_PREFIX + userName + ": " + clientMessage, receiverUserName);
                     chatServer.sendMessagePrivate("(You) "+SystemConst.PRIVATE_PREFIX + ": "+clientMessage,userName);
                 } else{
-                    chatServer.broadcastMessage(userName + ": " + clientMessage);
+                    chatServer.broadcastMessage(userName + ": " + clientMessage,userName);
                 }
 
                 if (clientMessage.equals(SystemConst.END_SIGH)) {
@@ -75,7 +75,7 @@ public class ClientHandler implements Runnable {
             chatServer.removeClient(this);
             clientSocket.close();
             System.out.println(userName + " disconnected.");
-            chatServer.broadcastMessage(userName + " left the chat.");
+            chatServer.broadcastMessage(userName + " left the chat.", userName);
 
         } catch (IOException e) {
             e.printStackTrace();

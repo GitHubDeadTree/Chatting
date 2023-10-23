@@ -39,10 +39,8 @@ public class transThread_upLoadToServer implements Runnable{
                 if (!file.exists()) {
                     file.mkdirs();
                 }
-
-                String fileName = System.currentTimeMillis() + (new Random().nextInt(9) + 1) + _fileName;
                 // 5.创建一个本地字节输出流对象
-                FileOutputStream fos = new FileOutputStream(file + File.separator + fileName);
+                FileOutputStream fos = new FileOutputStream(file + File.separator + _fileName);
                 // 获得输入流
                 InputStream inStream = socket.getInputStream();
                 // 6.使用输入流的方法 read 读取客户端发送过来的文件数据
@@ -52,7 +50,7 @@ public class transThread_upLoadToServer implements Runnable{
                     // 7.使用 FileOutputStream 对象的方法 write 将读取到文件数据写入到服务器本地文件中
                     fos.write(bytes, 0, i);
                 }
-                System.out.println("接收文件："+fileName+" 到 "+file.getPath());
+                System.out.println("接收文件："+_fileName+" 到 "+file.getPath());
 
                 // 9.给客户端发送一段文字：文件上传成功！
                 _chatServer.sendMessagePrivate(SystemConst.FILE_UPLOAD_SUCCESS,_userName);

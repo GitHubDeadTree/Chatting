@@ -50,7 +50,7 @@ public class ClientService implements Runnable {
                 }
 
                 if (clientMessage.startsWith(SystemConst.UPLOAD_FILE)) {
-                    String[] item = clientMessage.split(" ");
+                    String[] item = clientMessage.split("-");
                     if (item.length==1) uploadFileToServer("test.txt");
                     else{
                         uploadFileToClient(item[1],item[2]);
@@ -115,15 +115,23 @@ public class ClientService implements Runnable {
         fIS.close();
         socketTrans.close();
     }
+    /**
+     * A用户把文件传给B用户
+     * 上传到服务器 -> 服务器分发
+     * */
     public void uploadFileToClient(String filePath,String receiverName) throws IOException {
-        int lastBackslashIndex = filePath.lastIndexOf("\\"); // 查找最后一个反斜杠的位置
-        String fileName = filePath.substring(lastBackslashIndex + 1); // 提取最后一个反斜杠之后的子字符串
+        int lastBackslashIndex = filePath.lastIndexOf('\\'); // 查找最后一个反斜杠的位置
+        String _fileName = filePath.substring(lastBackslashIndex + 1); // 提取最后一个反斜杠之后的子字符串
+        //随机化文件名
+        String fileName = System.currentTimeMillis() + (new Random().nextInt(9) + 1) + _fileName;
         if (lastBackslashIndex >= 0) {
             System.out.println("File Name: " + fileName);
         } else {
             System.out.println("Invalid file path");
         }
+        //服务器上传
         chatServer.upLoadToServer(fileName, userName);
+
         Socket socketTrans = new Socket("localhost", SystemConst.THREAD_UPLOAD_PORT);
         // 创建本地文件输入流
         FileInputStream fIS = new FileInputStream(filePath);
@@ -138,9 +146,9 @@ public class ClientService implements Runnable {
         }
         // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
         socketTrans.shutdownOutput();
-
         fIS.close();
         socketTrans.close();
+        //服务器分发
         chatServer.postToClient(fileName,receiverName);
     }
 

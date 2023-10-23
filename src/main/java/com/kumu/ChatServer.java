@@ -75,6 +75,11 @@ public class ChatServer {
     /**
      * 把文件传给客户端
      * */
-    public void postToClient(String fileName, String receiverName) {
+    public void postToClient(String fileName, String receiverName) throws IOException {
+        for (ClientService client : clientServiceList) {
+            if (client.getUserName().equals(receiverName)) {
+                client.downloadFileFromServer(fileName);
+            }
+        }
     }
 }

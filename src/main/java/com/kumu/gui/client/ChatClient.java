@@ -131,7 +131,9 @@ public class ChatClient {
             // 现在，filePath 包含用户选择的文件的路径
             // 将 filePath 发送到服务器或进行其他逻辑处理
             //TODO 让用户输入接受者的用户名
-            writer.println(SystemConst.UPLOAD_FILE+" "+filePath);
+            String receiverName = JOptionPane.showInputDialog("选择接收者: ");
+            String order = SystemConst.UPLOAD_FILE+"-"+filePath+"-"+receiverName;
+            writer.println(order);
         }
     }
 

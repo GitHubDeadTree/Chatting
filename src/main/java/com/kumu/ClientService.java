@@ -48,11 +48,13 @@ public class ClientService implements Runnable {
                 if (Objects.isNull(clientMessage)) {
                     continue;
                 }
-                /**
-                 * 如果用户要传文件的话，就一定是私发(不可能广播文件)
-                 */
+
                 if (clientMessage.startsWith(SystemConst.UPLOAD_FILE)) {
-                    uploadFileToServer("test.txt");
+                    String[] item = clientMessage.split(" ");
+                    if (item.length==1) uploadFileToServer("test.txt");
+                    else{
+                        uploadFileToClient(item[1],item[2]);
+                    }
                 }else if(clientMessage.startsWith(SystemConst.DOWNLOAD_FILE)){
                     downloadFileFromServer("test_Server.txt");
                 }else if(clientMessage.startsWith(SystemConst.SEND_MESSAGE_PRIVATE)){
@@ -112,6 +114,34 @@ public class ClientService implements Runnable {
 
         fIS.close();
         socketTrans.close();
+    }
+    public void uploadFileToClient(String filePath,String receiverName) throws IOException {
+        int lastBackslashIndex = filePath.lastIndexOf("\\"); // 查找最后一个反斜杠的位置
+        String fileName = filePath.substring(lastBackslashIndex + 1); // 提取最后一个反斜杠之后的子字符串
+        if (lastBackslashIndex >= 0) {
+            System.out.println("File Name: " + fileName);
+        } else {
+            System.out.println("Invalid file path");
+        }
+        chatServer.upLoadToServer(fileName, userName);
+        Socket socketTrans = new Socket("localhost", SystemConst.THREAD_UPLOAD_PORT);
+        // 创建本地文件输入流
+        FileInputStream fIS = new FileInputStream(filePath);
+        // 获取网络字节输出流
+        OutputStream opStream = socketTrans.getOutputStream();
+        // 读取要上传的文件数据
+        byte[] bytes = new byte[1024];
+        int i = 0;
+        while ((i = fIS.read(bytes)) != -1) {
+            // 使用输出流将文件数据发送到服务端的Socket
+            opStream.write(bytes, 0, i);
+        }
+        // 禁用此套接字的输出流，此时会写入一个终止标记，这样服务端就可以读取到此标记，就不会出现阻塞的问题了
+        socketTrans.shutdownOutput();
+
+        fIS.close();
+        socketTrans.close();
+        chatServer.postToClient(fileName,receiverName);
     }
 
     /**

@@ -72,4 +72,9 @@ public class ChatServer {
         transThread_downloadToClient threadFile = new transThread_downloadToClient(fileName);
         new Thread(threadFile).start();
     }
+    /**
+     * 把文件传给客户端
+     * */
+    public void postToClient(String fileName, String receiverName) {
+    }
 }

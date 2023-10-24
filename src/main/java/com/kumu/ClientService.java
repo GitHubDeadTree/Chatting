@@ -20,8 +20,11 @@ public class ClientService implements Runnable {
     private ChatServer chatServer;
     private String userName;
 
+    private String _filePath;
+
     public ClientService(Socket socket, ChatServer chatServer) { //接收从服务器到客户端的Socket
         this.clientSocket = socket;
+        _filePath = null;
         try {
             reader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             writer = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -49,17 +52,20 @@ public class ClientService implements Runnable {
                     continue;
                 }
 
-                if (clientMessage.startsWith(SystemConst.UPLOAD_FILE)) {
+                if (clientMessage.startsWith(SystemConst.PRE_UPLOAD_FILE)) {
                     String[] item = clientMessage.split("-");
                     if (item.length==1) uploadFileToServer("test.txt");
                     else{
                         uploadFileToClient(item[1],item[2]);
                     }
-                }else if(clientMessage.startsWith(SystemConst.DOWNLOAD_FILE)){
+                }else if(clientMessage.startsWith(SystemConst.PRE_DOWNLOAD_FILE)){
                     downloadFileFromServer("test_Server.txt");
-                }else if(clientMessage.startsWith(SystemConst.SEND_MESSAGE_PRIVATE)){
+                }else if(clientMessage.startsWith(SystemConst.PRE_SETTING_PATH)){
+                     _filePath = clientMessage.substring(clientMessage.indexOf(' ')+1);
+                }
+                else if(clientMessage.startsWith(SystemConst.PRE_SEND_MESSAGE_PRIVATE)){
 
-                    clientMessage = clientMessage.substring(SystemConst.SEND_MESSAGE_PRIVATE.length());
+                    clientMessage = clientMessage.substring(SystemConst.PRE_SEND_MESSAGE_PRIVATE.length());
 
                     String receiverUserName = clientMessage.substring(0,clientMessage.indexOf(' '));
                     clientMessage = clientMessage.substring(receiverUserName.length()+1);
@@ -157,10 +163,16 @@ public class ClientService implements Runnable {
      * */
     public void downloadFileFromServer(String _fileName) throws IOException {
         // 判断本地目录路径是否存在，若不存在要创建此目录
-        File file = new File("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\"+SystemConst.FILE_FOLDER_CLIENT);
+        File file = null;
+        if (_filePath == null) {
+            file = new File("E:\\Game\\college\\大二\\java\\实验课\\聊天室\\" + SystemConst.FILE_FOLDER_CLIENT);
+        }else{
+            file = new File(_filePath);
+        }
         if (!file.exists()) {
             file.mkdirs();
         }
+
         chatServer.downloadFromServer(_fileName);
         Socket socketTrans = new Socket("localhost", SystemConst.THREAD_PORT_DOWNLOAD);
         String fileName = System.currentTimeMillis() + (new Random().nextInt(9) + 1) + _fileName;

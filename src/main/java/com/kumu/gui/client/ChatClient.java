@@ -4,16 +4,8 @@ import com.kumu.SystemConst;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import java.net.Socket;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.net.Socket;
-import java.util.Scanner;
 
 public class ChatClient {
     private String _username;
@@ -53,8 +45,8 @@ public class ChatClient {
             uploadButton.addActionListener(e -> uploadFile());
 
             // Create the "Download" button
-            JButton downloadButton = new JButton("Download");
-            downloadButton.addActionListener(e -> downloadFile());
+            JButton downloadButton = new JButton("Setting");
+            downloadButton.addActionListener(e -> settingFilePath());
 
             // Create a panel for the buttons
             JPanel buttonPanel = new JPanel();
@@ -130,17 +122,32 @@ public class ChatClient {
             String filePath = selectedFile.getAbsolutePath();
             // 现在，filePath 包含用户选择的文件的路径
             // 将 filePath 发送到服务器或进行其他逻辑处理
-            //TODO 让用户输入接受者的用户名
             String receiverName = JOptionPane.showInputDialog("选择接收者: ");
-            String order = SystemConst.UPLOAD_FILE+"-"+filePath+"-"+receiverName;
+            String order = SystemConst.PRE_UPLOAD_FILE +"-"+filePath+"-"+receiverName;
             writer.println(order);
         }
     }
 
 
-    private void downloadFile() {
-        // Implement the logic for file download here
-        // You can request a file from the server and save it to your local system
+    private void settingFilePath() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY); // 设置为选择文件夹模式
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        int result = fileChooser.showOpenDialog(frame);
+
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedDirectory = fileChooser.getSelectedFile(); // 获取用户选择的文件夹
+            String folderPath = selectedDirectory.getAbsolutePath(); // 获取文件夹的路径
+            // 现在，folderPath 包含用户选择的文件夹的路径
+            // 将 folderPath 发送到服务器或进行其他逻辑处理
+            writer.println(SystemConst.PRE_SETTING_PATH + " " + folderPath);
+        }
     }
 
 }
